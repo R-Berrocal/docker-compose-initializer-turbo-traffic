@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    container_name: nestjs-rabbitmq
+    image: rabbitmq:3.12.8-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    networks:
+      - microservices-network
+  consumer:
+    container_name: nestjs-consumer
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - '3001:3001'
+    networks:
+      - microservices-network
+    depends_on:
+      - rabbitmq
+    environment:
+      MONGO_URL: mongodb+srv://robertoberro20:GduGFiDKPimeNEMu@turbo-traffic.s2ukgn2.mongodb.net/test
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      PORT: 3001
+  producer:
+    container_name: nestjs-producer
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - '3000:3000'
+    networks:
+      - microservices-network
+    depends_on:
+      - rabbitmq
+    environment:
+      PORT: 3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+
+networks:
+  microservices-network:
+    driver: bridge
